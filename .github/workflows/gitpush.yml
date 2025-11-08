@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # copy the whole repo to EC2 (ansible, web/, etc.)
+      # Copy the whole repo to EC2 (Ansible, docker/, etc.)
       - name: Copy app files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -24,6 +24,7 @@ jobs:
           source: "."
           target: "/home/${{ secrets.EC2_USER }}/nginx-app"
 
+      # SSH into EC2 to build and deploy Docker container
       - name: Deploy on EC2 (build + restart container)
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -37,10 +38,10 @@ jobs:
             ls -R .
 
             echo "=== show html (for debug) ==="
-            cat web/index.html || true
+            cat docker/app/index.html || true
 
-            # build image FROM the web folder, USING the Dockerfile inside web/
-            sudo docker build --no-cache -t custom-nginx:latest -f web/Dockerfile web
+            # build Docker image FROM docker folder, USING Dockerfile inside docker/
+            sudo docker build --no-cache -t custom-nginx:latest -f docker/Dockerfile docker
 
             # stop & remove old container if running
             if [ "$(sudo docker ps -q -f name=nginx-container)" ]; then
